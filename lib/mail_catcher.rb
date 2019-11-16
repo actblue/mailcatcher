@@ -22,6 +22,7 @@ module MailCatcher extend self
   autoload :Mail, "mail_catcher/mail"
   autoload :Smtp, "mail_catcher/smtp"
   autoload :Web, "mail_catcher/web"
+  autoload :Mailgun, "mail_catcher/mailgun"
 
   def env
     ENV.fetch("MAILCATCHER_ENV", "production")
@@ -124,6 +125,14 @@ module MailCatcher extend self
           options[:http_path] = clean_path
         end
 
+        parser.on("--mailgun-ip IP", String, "Set an IP address to catch mailgun messages") do |ip|
+          options[:mailgun_ip] = ip
+        end
+
+        parser.on("--mailgun-port PORT", Integer, "Set the port to catch mailgun messages") do |port|
+          options[:mailgun_port] = port
+        end
+
         parser.on("--no-quit", "Don't allow quitting the process") do
           options[:quit] = false
         end
@@ -191,6 +200,13 @@ module MailCatcher extend self
         puts "==> #{http_url}"
       end
 
+      if options[:mailgun_port]
+        rescue_port options[:mailgun_port] do
+          Thin::Server.start(options[:mailgun_ip], options[:mailgun_port], Mailgun, signals: false)
+          puts "==> #{mailgun_url}"
+        end
+      end
+
       # Make sure we quit nicely when asked
       # We need to handle outside the trap context, hence the timer
       trap("INT") { EM.add_timer(0) { quit! } }
@@ -232,6 +248,10 @@ protected
 
   def http_url
     "http://#{@@options[:http_ip]}:#{@@options[:http_port]}#{@@options[:http_path]}".chomp("/")
+  end
+
+  def mailgun_url
+    "http://#{@@options[:mailgun_ip]}:#{@@options[:mailgun_port]}"
   end
 
   def rescue_port port
