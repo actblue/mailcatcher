@@ -26,6 +26,18 @@ RSpec.describe "Configuration", type: :feature do
     expect(page).to have_no_selector("#messages tbody tr", text: "First")
   end
 
+  it "keeps only the configured number of most recent messages with the deprecated option",
+    mailcatcher_options: %w[--max-mail-to-keep 2] do
+    deliver_with_subject("First")
+    deliver_with_subject("Second")
+    deliver_with_subject("Third")
+
+    expect(page).to have_selector("#messages tbody tr", count: 2)
+    expect(page).to have_selector("#messages tbody tr", text: "Third")
+    expect(page).to have_selector("#messages tbody tr", text: "Second")
+    expect(page).to have_no_selector("#messages tbody tr", text: "First")
+  end
+
   it "serves the complete application below an HTTP path prefix",
     mailcatcher_options: %w[--ip 127.0.0.1 --http-path mail],
     http_path: "/mail/" do

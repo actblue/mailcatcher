@@ -119,6 +119,11 @@ module MailCatcher extend self
           options[:messages_limit] = count
         end
 
+        # Deprecated alias for --messages-limit, where zero or less means no limit
+        parser.on("--max-mail-to-keep NUM", Integer, "Deprecated, use --messages-limit") do |num|
+          options[:messages_limit] = num if num > 0
+        end
+
         parser.on("--http-path PATH", String, "Add a prefix to all HTTP paths") do |path|
           clean_path = Rack::Utils.clean_path_info("/#{path}")
 
