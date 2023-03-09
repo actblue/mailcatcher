@@ -32,7 +32,7 @@ module MailCatcher
       end
       MailCatcher::Mail.add_message(
         sender: params[:from],
-        recipients: params[:to],
+        recipients: [params[:to]],
         source: mail.to_s
       )
       status 201
